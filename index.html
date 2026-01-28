@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Birthday Surprise</title>
+<style>
+body, html {
+  margin:0; padding:0; overflow:hidden;
+  font-family:'Comic Sans MS', cursive;
+  background: linear-gradient(to top, #0d0d0d, #1a1a1a);
+  color:#fff;
+  position:relative;
+}
+.screen { width:100vw; height:100vh; display:none; justify-content:center; align-items:center; flex-direction:column; text-align:center; padding:20px; }
+.active{display:flex;}
+input{ font-size:20px; padding:10px 15px; margin:10px; }
+button{ font-size:20px; padding:10px 15px; margin-top:20px; cursor:pointer; border:none; border-radius:10px; transition:all 0.2s; font-weight:bold;}
+#waitText{font-size:40px; font-weight:bold; position:absolute; top:30%; animation:fadeOut 3s forwards; color:#ff3399; text-shadow: 0 0 10px #ff3399, 0 0 20px #ff66cc;}
+@keyframes fadeOut {0%{opacity:1} 100%{opacity:0; top:0;}}
+.train-container{position:absolute; bottom:50px; left:-600px; display:flex; align-items:flex-end; transition:left 20s linear;}
+.train-car{
+  width:250px; height:150px; background:#111; border:5px solid #fff;
+  display:flex; justify-content:center; align-items:center; font-size:24px; font-weight:bold;
+  border-radius:10px; margin-left:-40px; box-shadow:0 0 10px #ff33ff,0 0 20px #ff66ff,0 0 40px #ff99ff;
+  color:#ff99ff; text-shadow:0 0 5px #ff33ff,0 0 10px #ff66ff,0 0 20px #ff99ff;
+}
+.train-car:first-child{margin-left:0;}
+.final-message{
+  position:absolute; top:50px; left:55%; width:40%; height:80%; text-align:left;
+  opacity:0; font-size:20px; line-height:1.5; overflow-y:auto; padding:20px;
+  background:rgba(0,0,0,0.6); border-radius:10px; color:#ffccff;
+  text-shadow:0 0 5px #ff99ff,0 0 10px #ff66ff,0 0 15px #ff33ff;
+}
+.final-message.active{opacity:1; transition:opacity 1s;}
+#yesNoContainer{display:flex; gap:20px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:20px;}
+#gfPhoto{position:absolute; top:50px; left:50px; height:90%; border-radius:10px; border:3px solid #fff;}
+#trainImage{position:absolute; bottom:50px; left:-600px; height:150px;}
+.heart{
+  position:absolute;
+  font-size:20px;
+  opacity:0.7;
+  animation: floatUp linear infinite;
+  user-select:none;
+  pointer-events:none;
+}
+@keyframes floatUp{
+  0%{transform:translateY(0) scale(1); opacity:0.8;}
+  100%{transform:translateY(-100vh) scale(1.3); opacity:0;}
+}
+.question-heart{
+  font-size:24px;
+  margin-right:10px;
+  color:#ff3399;
+  text-shadow: 0 0 5px #ff3399,0 0 10px #ff66cc,0 0 20px #ff99cc;
+}
+button#yesBtn{background-color:#00ff44; color:#000;}
+button#noBtn{background-color:#ff4444; color:#fff;}
+#middleEmojiMessage{
+  font-size:24px; text-align:center; opacity:0; transition:opacity 0.5s;
+}
+#middleEmojiMessage img{height:100px;}
+</style>
+</head>
+<body>
+
+<!-- Page 1: Welcome -->
+<div id="screen1" class="screen active">
+<h1>🎉 Welcome to a Special Birthday Surprise! 🎉</h1>
+<p>Click to start!</p>
+<button onclick="nextScreen(2)">Start</button>
+</div>
+
+<!-- Page 2: Name -->
+<div id="screen2" class="screen">
+<h2>Enter your name</h2>
+<input type="text" id="nameInput" placeholder="Your name...">
+<p>Press Enter after typing your name</p>
+</div>
+
+<!-- Page 3: Questions -->
+<div id="screen3" class="screen">
+<h2 id="questionTitle"></h2>
+<input type="text" id="answerInput" placeholder="Type answer...">
+</div>
+
+<!-- Page 4: Train -->
+<div id="screen4" class="screen">
+<div id="waitText">Wait, the train is coming for you! 🚂</div>
+<img id="trainImage" src="train.png" alt="Train">
+<div class="train-container" id="trainTextContainer"></div>
+</div>
+
+<!-- Page 5: Yes/No playful -->
+<div id="screen5" class="screen">
+<h2>Do you want another surprise? 😏</h2>
+<div id="yesNoContainer">
+<button id="yesBtn">Yes 🌟</button>
+<button id="noBtn">No 😢</button>
+</div>
+</div>
+
+<!-- Page 6: Middle "I knew you would click me" page -->
+<div id="screen6" class="screen">
+<div id="middleEmojiMessage"></div>
+</div>
+
+<!-- Page 7: Final message + photo -->
+<div id="screen7" class="screen">
+<img id="gfPhoto" src="BD GIRL.jpg" alt="Her Photo">
+<div class="final-message" id="finalMessage"></div>
+</div>
+
+<audio id="song" src="birthday.mp3" loop></audio>
+
+<script>
+// Floating hearts background
+for(let i=0;i<30;i++){
+  let heart=document.createElement('div');
+  heart.className='heart';
+  heart.style.left=Math.random()*100+'vw';
+  heart.style.fontSize=(15+Math.random()*15)+'px';
+  heart.style.animationDuration=(5+Math.random()*5)+'s';
+  heart.innerText='❤️';
+  document.body.appendChild(heart);
+}
+
+// Main program
+let currentScreen=1;
+let name="Friend";
+let answers={};
+let questions=[
+  "Who is your favorite person to spend time with?",
+  "What is your favorite color?",
+  "What is your favorite hobby?",
+  "What is your favorite food?",
+  "What makes you happiest?",
+  "What is your favorite memory with me?",
+  "If you could go anywhere in the world, where would it be?",
+  "What’s one thing that always makes you smile?",
+  "If you are allowed to spend a whole day with anyone, who would it be?"
+];
+let currentQuestion=0;
+
+// show screen
+function showScreen(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen'+n).classList.add('active');
+  currentScreen=n;
+}
+
+// move to next screen
+function nextScreen(n){
+  showScreen(n);
+  if(n===2) document.getElementById('nameInput').focus();
+  if(n===3) showQuestion();
+  if(n===4) startTrainAnimation();
+  if(n===5) setupYesNo();
+  const song = document.getElementById('song');
+  if(song.paused) song.play().catch(()=>{});
+}
+
+// name input
+document.getElementById('nameInput').addEventListener('keydown', function(e){
+  if(e.key==='Enter'){
+    e.preventDefault();
+    let val = this.value.trim();
+    if(val) name=val;
+    nextScreen(3);
+  }
+});
+
+// show question
+function showQuestion(){
+  const title = document.getElementById('questionTitle');
+  title.innerHTML=`<span class="question-heart">❤️</span> Question ${currentQuestion+1}: ${questions[currentQuestion]}`;
+  let input=document.getElementById('answerInput');
+  input.value='';
+  input.focus();
+}
+
+// handle question answers
+document.getElementById('answerInput').addEventListener('keydown', function(e){
+  if(e.key==='Enter'){
+    e.preventDefault();
+    let val = this.value.trim();
+    if(val) answers[`q${currentQuestion+1}`] = val;
+    currentQuestion++;
+    if(currentQuestion < questions.length){
+      showQuestion();
+    } else {
+      localStorage.setItem('gfAnswers', JSON.stringify(answers));
+      nextScreen(4);
+    }
+  }
+});
+
+// train animation
+function startTrainAnimation(){
+  const trainTextContainer = document.getElementById('trainTextContainer');
+  trainTextContainer.innerHTML='';
+  const messages=[`Happy Birthday ${name}! 🎉`,`Wait for another surprise...`];
+  messages.forEach(msg=>{
+    const car=document.createElement('div');
+    car.className='train-car';
+    car.innerText=msg;
+    trainTextContainer.appendChild(car);
+  });
+  const trainImg = document.getElementById('trainImage');
+  trainImg.style.transition='left 20s linear';
+  trainTextContainer.style.transition='left 20s linear';
+  setTimeout(()=>{
+    trainImg.style.left = '100vw';
+    trainTextContainer.style.left = '100vw';
+  },100);
+  setTimeout(()=> nextScreen(5),22000);
+}
+
+// Yes/No playful
+function setupYesNo(){
+  const yesBtn = document.getElementById('yesBtn');
+  const noBtn = document.getElementById('noBtn');
+
+  let noClickCount = 0;
+  noBtn.onclick = ()=>{
+    noClickCount++;
+    yesBtn.style.transform = `scale(${1 + noClickCount*0.2})`;
+  };
+
+  yesBtn.onclick = ()=>{
+    nextScreen(6);
+    const middleEmoji = document.getElementById('middleEmojiMessage');
+    middleEmoji.innerHTML = `<p style="color:#ff99ff;text-shadow:0 0 5px #ff33ff,0 0 10px #ff66ff;">Yess! I knew you would click me 😏<br><img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdWd2NzhiaXkzOTU3b3JjeGd6aDF1eTN2eHRzdGZ5bnF4aGEwYXRhbiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/RJzv5gG13bFsER317k/giphy.gif"></p>`;
+    middleEmoji.style.opacity=1;
+
+    setTimeout(()=>{
+      nextScreen(7);
+      showFinalMessage();
+    },5000);
+  };
+}
+
+// final message typing
+function typeFinalMessage(message){
+  const finalMsg=document.getElementById('finalMessage');
+  let i=0;
+  finalMsg.innerHTML='';
+  finalMsg.classList.add('active');
+  const interval = setInterval(()=>{
+    finalMsg.innerHTML += message.charAt(i);
+    i++;
+    if(i>=message.length) clearInterval(interval);
+  },30);
+}
+
+// final message
+function showFinalMessage(){
+  const finalMessageText = `
+My dearest ${name},
+
+From the moment you came into my life, everything started feeling more meaningful. Your smile, your laughter, your presence makes every day brighter. Being near you is a happiness I cannot describe in words. Every little moment we share — a laugh, a look, a gentle touch — makes my heart overflow with joy.  
+
+I wish today, your birthday, is filled with endless smiles, surprises, and love. I promise to cherish you, to laugh with you, and to create countless beautiful memories together. You deserve the world, my princess, and I am so lucky to be by your side.  
+
+Enjoy every second of your special day. Happy Birthday 💖
+  `;
+  typeFinalMessage(finalMessageText);
+}
+</script>
+</body>
+</html>
